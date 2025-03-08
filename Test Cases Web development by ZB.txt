@@ -2,3 +2,12 @@ Web Testing
 Test cases 
 
 https://testcasehub.net/functionalities.php
+
+
+Using Tools: 
+
+Postman, 
+
+Web Server: Based 
+
+FileZilla 
