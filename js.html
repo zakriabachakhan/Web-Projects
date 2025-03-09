@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Word Counter with API</title>
+
+    <style>
+        body{
+            font-family: 'Times New Roman', Times, serif;
+            background: linear-gradient(to left bottom, lightpink, lightblue, lightpink);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card{
+            background-color: white;
+            width: 50%;
+            box-shadow: 0px 0px 5px lightgray;
+            padding: 30px;
+            text-align: center;
+        }
+        .card-header{
+            background-color: blue;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .card-body{
+            margin: 20px;
+        }
+        .card-body textarea{
+            width: 100%;
+            height: 300px;
+            border: 2px dashed lightgray;
+            outline: none;
+            padding:15px; 
+            font-size: 1.6em;
+        }
+        .card-footer{
+            background-color: blue;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            JS-Word Counter with Vowel Detection
+        </div>
+
+        <div class="card-body">
+            <textarea id="textInput" placeholder="Start typing..."></textarea>
+        </div>
+
+        <div class="card-footer">
+            <h4>Words: <span id="words">0</span></h4>
+            <h4>Characters: <span id="characters">0</span></h4>
+            <h4>Vowels: <span id="vowels">0</span></h4>
+            <button id="clearBtn">Clear</button>
+        </div>
+
+        <div class="suggestions">
+            <h3>Related Words:</h3>
+            <p id="suggestions">Start typing...</p>
+        </div>
+    </div>
+
+</body>
+</html>
+
+<script>
+    class WordCounter {
+        #apiURL = 'https://api.datamuse.com/words?ml='; // Private API URL
+//=================================================================================
+        constructor() {
+            this.textInput = document.getElementById("textInput");
+            this.wordCount = document.getElementById("words");
+            this.charCount = document.getElementById("characters");
+            this.vowelCount = document.getElementById("vowels");
+            this.suggestions = document.getElementById("suggestions");
+            this.clearBtn = document.getElementById("clearBtn");
+
+            this.initEventListeners();
+        }
+//=================================================================================
+        // Initialize Event Listeners
+        initEventListeners() {
+            this.textInput.addEventListener("input", () => {
+                this.updateCounts();
+            });
+            this.clearBtn.addEventListener("click", () => {
+                this.clearText();
+            });
+        }
+//=================================================================================
+        // Update character, word, and vowel count
+        updateCounts() {
+            let text = this.textInput.value;
+            this.charCount.innerText = text.length;  
+
+            let words = text.trim().length > 0 ? text.trim().split(/\s+/) : [];
+            this.wordCount.innerText = words.length;
+
+            // Count vowels manually
+            let vowelsList = "aeiouAEIOU";
+            let vowelCount = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                if (vowelsList.includes(text[i])) {
+                    vowelCount++;
+                }
+            }
+
+            this.vowelCount.innerText = vowelCount;
+
+            // Fetch word suggestions only if the last word has more than 2 letters
+            if (words.length > 0 && words[words.length - 1].length > 2) {
+                this.fetchSuggestions(words[words.length - 1]);
+            } else {
+                this.suggestions.innerText = "Start typing...";
+            }
+        }
+//=================================================================================
+        // Fetch related words from API
+        async fetchSuggestions(word) {
+            try {
+                let response = await fetch(this.#apiURL + word);
+                let data = await response.json();
+                
+                // Extract first 5 words manually
+                let wordSuggestions = "";
+                for (let i = 0; i < 5 && i < data.length; i++) {
+                    if (i > 0) {
+                        wordSuggestions += ", ";
+                    }
+                    wordSuggestions += data[i].word;
+                }
+
+                this.suggestions.innerText = wordSuggestions 
+                    ? `Related Words: ${wordSuggestions}` 
+                    : "No suggestions found.";
+            } catch (error) {
+                console.error("API Error:", error);
+                this.suggestions.innerText = "Error fetching suggestions.";
+            }
+        }
+//=================================================================================
+        // Clear text area and reset counters
+        clearText() {
+            this.textInput.value = "";
+            this.wordCount.innerText = "0";
+            this.charCount.innerText = "0";
+            this.vowelCount.innerText = "0";
+            this.suggestions.innerText = "Start typing...";
+        }
+    }
+
+    // Initialize the WordCounter class
+    new WordCounter();
+//=================================================================================
+</script>
